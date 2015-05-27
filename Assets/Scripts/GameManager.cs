@@ -8,13 +8,12 @@ public class GameManager : MonoBehaviour {
 
 	public static GameManager instance = null;
 	public List<TextAsset> raw_levels;
+	public LevelManager levelManager;
 
 	private XmlDocument raw_level;
 	private int level = 0;
 
-	private LevelMap map;
 	private GameObject[] tiles;
-	private List<int> _targets; // a list of the indices in tiles where targets is
 	private int[] targets;
 	private GameObject player;
 	private bool victory;
@@ -37,47 +36,16 @@ public class GameManager : MonoBehaviour {
 
 	// call this from elsewhere
 	public void GameOver() {}
-	
+
 	void InitGame () {
 		// read the map data from a file
 		raw_level = new XmlDocument();
 		raw_level.LoadXml(raw_levels[level].text);
-		
-		int rows =  int.Parse(raw_level.FirstChild.Attributes["rows"].Value);
-		int cols =  int.Parse(raw_level.FirstChild.Attributes["cols"].Value);
-		map = GetComponent<LevelMap>();
-		map.Init(rows, cols, raw_level.InnerText);
 
-		// use the map data to create tile objects for the visual map
-		tiles = new GameObject[map.cols * map.rows];
-		_targets = new List<int> ();
-
-		// populate the array of tiles
-		for (int x = 0; x < map.cols; x++) {
-			for (int y = 0; y < map.rows; y++) {
-				GameObject toInstantiate = map.GetTileClass(x, y);
-				GameObject instance = Instantiate(toInstantiate, new Vector3(x, y, 0f), Quaternion.identity) as GameObject;
-
-				if (instance.tag == "Player") {
-					Debug.Log("player");
-					player = instance;
-										
-				} else if (instance.tag == "Target") {
-					_targets.Add(y*map.cols + x);
-				}
-
-				tiles[y*map.cols + x] = instance;
-
-				// every index has a floor tile
-				toInstantiate = map.FloorTile;
-				instance = Instantiate(toInstantiate, new Vector3(x, y, 0f), Quaternion.identity) as GameObject;
-					
-				// this is supposed to be useful to clear up clutter but I don't get it
-				//instance.transform.SetParent (mapHolder);
-			}
-		}
-
-		targets = _targets.ToArray ();
+		levelManager = GetComponent<LevelManager> ();
+		levelManager.Init (raw_level);
+		levelManager.NextLevel(out tiles, out targets, out player);
+	
 		Camera.main.backgroundColor = Color.magenta;
 		victory = false;
 	}
@@ -86,16 +54,21 @@ public class GameManager : MonoBehaviour {
 	void Update () {
 		int horizontal = 0;
 		int vertical = 0;
-		
-		horizontal = (int)Input.GetAxisRaw ("Horizontal");
-		vertical = (int)Input.GetAxisRaw ("Vertical");
-		
-		if (horizontal != 0) {
-			vertical = 0;
-		}
-		
-		if (horizontal != 0 || vertical != 0) {
-			AttemptMove (horizontal, vertical);
+
+		if (victory) {
+			levelManager.NextLevel(out tiles, out targets, out player);
+			victory = false;
+		} else {
+			horizontal = (int)Input.GetAxisRaw ("Horizontal");
+			vertical = (int)Input.GetAxisRaw ("Vertical");
+			
+			if (horizontal != 0) {
+				vertical = 0;
+			}
+			
+			if (horizontal != 0 || vertical != 0) {
+				AttemptMove (horizontal, vertical);
+			}
 		}
 	}
 
@@ -107,23 +80,22 @@ public class GameManager : MonoBehaviour {
 		int nx = px + xDir;
 		int ny = py + yDir;
 
-		int new_tile = ny * map.cols + nx;
-		int player_tile = py * map.cols + px;
+		int new_tile = ny * levelManager.cols + nx;
+		int player_tile = py * levelManager.cols + px;
 
 		if (0 > new_tile || new_tile >= tiles.Length) {
 			return;
 		}
 
 		GameObject neighbour = tiles[new_tile];
-		GameObject tmp;
 
 		if (neighbour != null && neighbour.tag == "Wall") {
 			// check beyond the wall
-			int far_tile = (ny + yDir) * map.cols + (nx + xDir);
+
+			int far_tile = (ny + yDir) * levelManager.cols + (nx + xDir);
 
 			if ((far_tile > -1) && (far_tile < tiles.Length) && (tiles[far_tile].tag != "Wall")) {
 				// we can push!
-				GameObject far_neighbour = tiles[far_tile];
 
 				// push the wall
 				SwapTiles(new_tile, far_tile);
@@ -140,7 +112,6 @@ public class GameManager : MonoBehaviour {
 			return;
 		} else {
 			// move the player, and swap the player and the floor tile
-
 			player.transform.position = new Vector3(nx, ny, 0);
 			SwapTiles(player_tile, new_tile);
 		}
