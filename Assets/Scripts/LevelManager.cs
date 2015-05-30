@@ -35,6 +35,8 @@ public class LevelManager : MonoBehaviour {
 		map = GetComponent<LevelMap>();
 		map.Init(raw[level]);
 
+		level++;
+
 		this.rows = map.rows;
 		this.cols = map.cols;
 
