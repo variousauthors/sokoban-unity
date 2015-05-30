@@ -19,3 +19,10 @@
 
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
+
+# builds etc
+.DS_Store
+sokoban.app/
+sokoban.x86
+sokoban.x86.zip
+sokoban_Data/

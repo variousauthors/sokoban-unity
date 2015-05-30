@@ -10,7 +10,6 @@ public class GameManager : MonoBehaviour {
 	public List<TextAsset> raw_levels;
 	public LevelManager levelManager;
 
-	private XmlDocument raw_level;
 	private int level = 0;
 
 	private GameObject[] tiles;
@@ -38,12 +37,9 @@ public class GameManager : MonoBehaviour {
 	public void GameOver() {}
 
 	void InitGame () {
-		// read the map data from a file
-		raw_level = new XmlDocument();
-		raw_level.LoadXml(raw_levels[level].text);
 
 		levelManager = GetComponent<LevelManager> ();
-		levelManager.Init (raw_level);
+		levelManager.Init (raw_levels);
 		levelManager.NextLevel(out tiles, out targets, out player);
 	
 		Camera.main.backgroundColor = Color.magenta;

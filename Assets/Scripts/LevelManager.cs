@@ -7,20 +7,23 @@ using System.Collections.Generic;
 public class LevelManager : MonoBehaviour {
 
 	private LevelMap map;
-	private XmlDocument xml;
+	private List<TextAsset> raw;
 	private List<int> _targets; // a list of the indices in tiles where targets is
 	private GameObject tileParent;
+	private int level;
 
 	[HideInInspector] public int cols;
 	[HideInInspector] public int rows;
 	
-	public void Init(XmlDocument xml) {
-		this.xml = xml;
+	public void Init(List<TextAsset> raw) {
+		this.raw = raw;
+		this.level = 0;
 	}
 
 	public void NextLevel(out GameObject[] tiles, out int[] targets, out GameObject player) {
-		this.rows = int.Parse(xml.FirstChild.Attributes["rows"].Value);
-		this.cols = int.Parse(xml.FirstChild.Attributes["cols"].Value);
+		if (level >= raw.Count) {
+			level = 0; // TODO more like, return false to let the game know there are no more levels
+		}
 
 		if (tileParent != null) {
 			Destroy(tileParent);
@@ -30,7 +33,10 @@ public class LevelManager : MonoBehaviour {
 		Transform transform = tileParent.transform;
 
 		map = GetComponent<LevelMap>();
-		map.Init(this.rows, this.cols, xml.InnerText);
+		map.Init(raw[level]);
+
+		this.rows = map.rows;
+		this.cols = map.cols;
 
 		// player is an out param, but clearly this won't do
 		player = new GameObject ();
@@ -40,11 +46,12 @@ public class LevelManager : MonoBehaviour {
 		_targets = new List<int> ();
 		
 		// populate the array of tiles
-		for (int x = 0; x < map.cols; x++) {
-			for (int y = 0; y < map.rows; y++) {
+		for (int y = 0; y < map.rows; y++) {
+			for (int x = 0; x < map.cols; x++) {
 				GameObject toInstantiate = map.GetTileClass(x, y);
 				GameObject instance = Instantiate(toInstantiate, new Vector3(x, y, 0f), Quaternion.identity) as GameObject;
-				
+
+
 				if (instance.tag == "Player") {
 					Debug.Log("player: (" + instance.transform.position.x + ", " + instance.transform.position.y + ")");
 					player = instance;

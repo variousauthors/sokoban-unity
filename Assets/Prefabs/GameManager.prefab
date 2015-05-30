@@ -42,7 +42,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   raw_levels:
-  - {fileID: 4900000, guid: 0d09ae714d4d04ebdbe6e57eb980f442, type: 3}
+  - {fileID: 4900000, guid: 124f01d654f9f4aca9f27185a4f6c1fe, type: 3}
+  - {fileID: 4900000, guid: bdf690ea03faf40e4b90b83f5f0cd504, type: 3}
   levelManager: {fileID: 0}
 --- !u!114 &11482670
 MonoBehaviour:
@@ -74,6 +75,7 @@ MonoBehaviour:
   Target: {fileID: 198558, guid: b355e4f3e551f45709e084a31967e899, type: 2}
   rows: 0
   cols: 0
+  grid: 
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
